@@ -33,4 +33,6 @@ int main()
     my_thread2.join();
     my_thread3.join();
     my_thread4.join();
+    // join() cleans up any storage associated with the thread
+    // so the std::thread object is no longer associated with the now-finished thread
 }
