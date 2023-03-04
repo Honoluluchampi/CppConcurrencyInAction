@@ -48,10 +48,16 @@ class thread_pool {
     }
 
     template <typename F, typename... Args, typename R = std::invoke_result_t<std::decay_t<F>, std::decay_t<Args>...>>
-    std::future<R> submit(F&& func, Args&&... args) {
-      auto task = std::make_shared<std::packaged_task<R()>>([func, args...]() {
-        return func(args...);
-      });
+    std::future<R> submit(F& func, Args&&... args) {
+      
+      auto task = std::make_shared<std::packaged_task<R()>>(
+        [&func, args = std::make_tuple(std::forward<Args>(args)...)]() mutable {
+          return std::apply([&func](auto&& ...args) {
+            return func(std::forward<Args>(args)...);
+          }, std::move(args));
+        }
+      );
+
       auto future = task->get_future();
 
       push_task([task = std::move(task)]() { (*task)(); });
